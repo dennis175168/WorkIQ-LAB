@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Work IQ 示範</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">
+          <span class="logo">◆</span>
+          <div>
+            <h1>Work IQ 示範</h1>
+            <p class="sub">Microsoft 365 Copilot · REST API</p>
+          </div>
+        </div>
+        <div class="account">
+          <span id="endpoint-badge" class="badge">prod</span>
+          <span id="account-name" class="muted"></span>
+          <button id="new-btn" class="ghost" title="開新對話" hidden>＋ 新對話</button>
+          <button id="logout-btn" class="ghost" hidden>登出</button>
+        </div>
+      </header>
+
+      <!-- Sign-in panel -->
+      <section id="login-panel" class="center-panel" hidden>
+        <div class="card">
+          <h2>登入以開始</h2>
+          <p class="muted">使用您的 Microsoft 365 帳戶（委派驗證）。</p>
+          <button id="login-btn" class="primary">登入</button>
+
+          <div id="device-code" class="device-code" hidden>
+            <p>請至下列網址並輸入代碼：</p>
+            <a id="device-uri" href="#" target="_blank" rel="noopener"></a>
+            <div class="code-row">
+              <code id="device-user-code"></code>
+              <button id="copy-code" class="ghost">複製</button>
+            </div>
+            <p class="muted small">登入完成後會自動進入聊天畫面…</p>
+          </div>
+          <p id="login-error" class="error" hidden></p>
+        </div>
+      </section>
+
+      <!-- Chat panel -->
+      <section id="chat-panel" class="chat" hidden>
+        <div id="messages" class="messages">
+          <div class="hint">
+            試試看：
+            <button class="chip">我今天有哪些會議？</button>
+            <button class="chip">摘要我未讀的 Outlook 郵件</button>
+            <button class="chip">最近和我協作最多的人是誰？</button>
+          </div>
+        </div>
+        <form id="chat-form" class="composer">
+          <label class="toggle" title="關閉時僅使用企業內部資料">
+            <input type="checkbox" id="web-search" checked />
+            <span>網路搜尋</span>
+          </label>
+          <input
+            id="chat-input"
+            type="text"
+            placeholder="輸入問題，按 Enter 送出…"
+            autocomplete="off"
+          />
+          <button type="submit" class="primary" id="send-btn">送出</button>
+        </form>
+      </section>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>

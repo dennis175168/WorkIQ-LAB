@@ -1,0 +1,86 @@
+### Work IQ REST API — quick manual tests (VS Code REST Client extension)
+###
+### 1. Paste a delegated access token below (scope: api://workiq.svc.cloud.microsoft/WorkIQAgent.Ask).
+###    You can grab one from `npm start` logs or from the Microsoft Entra token flow.
+### 2. Run "Create conversation", copy the returned id into @conversationId.
+### 3. Run the chat requests.
+
+@base = https://workiq.svc.cloud.microsoft/rest
+@token = PASTE_DELEGATED_ACCESS_TOKEN_HERE
+@conversationId = PASTE_CONVERSATION_ID_HERE
+
+### Create a conversation
+POST {{base}}/conversations
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{}
+
+### Send a chat message (synchronous)
+POST {{base}}/conversations/{{conversationId}}/chat
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "message": {
+    "text": "What meeting do I have at 9 AM tomorrow morning?"
+  },
+  "locationHint": {
+    "timeZone": "America/New_York"
+  }
+}
+
+### Send a chat message with a SharePoint/OneDrive file as context
+POST {{base}}/conversations/{{conversationId}}/chat
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "message": {
+    "text": "Summarize this document for me."
+  },
+  "locationHint": {
+    "timeZone": "America/New_York"
+  },
+  "contextualResources": {
+    "files": [
+      {
+        "uri": "https://contoso.sharepoint.com/sites/Engineering/Shared%20Documents/Specs/Business-Model.docx"
+      }
+    ]
+  }
+}
+
+### Send a chat message with web search grounding turned off (single turn)
+POST {{base}}/conversations/{{conversationId}}/chat
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "message": {
+    "text": "Summarize my recent emails about the Q3 launch."
+  },
+  "locationHint": {
+    "timeZone": "America/New_York"
+  },
+  "contextualResources": {
+    "webSearchOptions": {
+      "isEnabled": false
+    }
+  }
+}
+
+### Send a chat message on the streamed endpoint
+POST {{base}}/conversations/{{conversationId}}/chatOverStream
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Accept: text/event-stream
+
+{
+  "message": {
+    "text": "What meeting do I have at 9 AM tomorrow morning?"
+  },
+  "locationHint": {
+    "timeZone": "America/New_York"
+  }
+}
