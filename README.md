@@ -122,3 +122,12 @@ requests.http # manual request collection
 - No long-running tasks (prone to gateway timeouts).
 - Web + enterprise search grounding are on by default; disabling web search is a per-message action.
 - `/beta` APIs may change and aren't supported for production.
+
+## Work IQ official docs
+
+Microsoft Learn documentation for the Work IQ REST API and related setup:
+
+- [Work IQ REST API overview](https://learn.microsoft.com/microsoft-365/copilot/extensibility/work-iq/rest/overview)
+- [Enable Work IQ](https://learn.microsoft.com/microsoft-365/copilot/extensibility/work-iq/enable-work-iq)
+- [Work IQ extensibility overview](https://learn.microsoft.com/microsoft-365/copilot/extensibility/work-iq/overview)
+- [Authentication & delegated permissions (Microsoft Entra)](https://learn.microsoft.com/entra/identity-platform/v2-oauth2-device-code)
