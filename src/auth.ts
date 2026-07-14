@@ -100,3 +100,13 @@ export async function getAccessToken(
   }
   return result.accessToken;
 }
+
+/** Return the signed-in user's username (email/UPN) from the token cache, if any. */
+export async function getSignedInUsername(
+  tenantId: string,
+  clientId: string
+): Promise<string | null> {
+  const pca = buildClient(tenantId, clientId);
+  const accounts = await pca.getTokenCache().getAllAccounts();
+  return accounts[0]?.username ?? null;
+}
