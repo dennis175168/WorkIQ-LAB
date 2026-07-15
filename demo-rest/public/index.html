@@ -13,9 +13,7 @@
       <header class="topbar">
         <div class="brand">
           <span id="brand-name">Work IQ Chat</span>
-          <svg class="chev" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-            <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <span class="brand-sub">REST Chat API</span>
         </div>
         <div class="account">
           <span id="account-name" class="muted"></span>
@@ -53,11 +51,9 @@
 
         <div class="centerblock">
           <h1 id="hero-title" class="hero-title">What's on your mind today?</h1>
+          <p class="hero-sub">直接呼叫 Work IQ REST Chat API,對你的 Microsoft 365 資料做有根據的問答(唯讀,不執行動作)。</p>
 
           <form id="chat-form" class="composer">
-            <button type="button" class="c-add" title="Add" aria-label="Add">
-              <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            </button>
             <input
               id="chat-input"
               class="c-input"
@@ -65,9 +61,6 @@
               placeholder="Ask anything"
               autocomplete="off"
             />
-            <button type="button" class="c-mic" title="Voice" aria-label="Voice">
-              <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-            </button>
             <button type="submit" class="c-send" id="send-btn" title="Send" aria-label="Send">
               <svg class="i-wave" viewBox="0 0 24 24" width="20" height="20"><path d="M4 12h1M8 8v8M12 5v14M16 8v8M20 12h0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
               <svg class="i-arrow" viewBox="0 0 24 24" width="20" height="20"><path d="M12 19V5M6 11l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>

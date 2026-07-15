@@ -288,3 +288,29 @@ html, body {
   #account-name { display: none; }
   .c-input { font-size: 16px; }
 }
+
+/* ---- Demo 1 theme (teal) + labels ---- */
+:root {
+  --accent: #0ea5a4;
+  --accent-2: #14b8a6;
+}
+.brand { gap: 8px; }
+.brand-sub {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--hover);
+  padding: 2px 9px;
+  border-radius: 999px;
+}
+.hero-title { margin: 0 0 12px; }
+.hero-sub {
+  text-align: center;
+  color: var(--muted-2);
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0 auto 24px;
+  max-width: 620px;
+}
+.chat.has-messages .hero-sub { display: none; }
+
