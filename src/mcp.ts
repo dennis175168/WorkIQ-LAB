@@ -160,7 +160,9 @@ export class WorkIqMcpClient {
   }
 
   /** List the tools exposed by the Work IQ MCP server. */
-  async listTools(): Promise<{ tools: Array<{ name: string; description?: string }> }> {
+  async listTools(): Promise<{
+    tools: Array<{ name: string; description?: string; inputSchema?: unknown }>;
+  }> {
     await this.initialize();
     return this.send("tools/list", {});
   }

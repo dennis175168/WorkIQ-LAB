@@ -100,7 +100,7 @@ let agent: WorkIqAgent | null = null;
 
 async function getAgent(): Promise<WorkIqAgent> {
   if (!agent) {
-    agent = new WorkIqAgent(mcp, await currentUsername(), TIME_ZONE);
+    agent = await WorkIqAgent.create(mcp, await currentUsername(), TIME_ZONE);
   }
   return agent;
 }

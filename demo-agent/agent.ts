@@ -71,80 +71,71 @@ export function buildModel() {
   });
 }
 
-/** Pull the plain text out of an MCP tool result's content blocks. */
-function firstText(result: McpToolResult): string {
-  const block = result.content?.find((c) => c.type === "text" && c.text);
-  return block?.text ?? "";
+/** Convert an MCP tool result into text the model can read. */
+function resultToText(result: McpToolResult): string {
+  const text = (result.content ?? [])
+    .filter((c) => c.type === "text" && c.text)
+    .map((c) => c.text)
+    .join("\n");
+  if (text) return text;
+  if (result.structuredContent) return JSON.stringify(result.structuredContent);
+  return result.isError ? "Tool returned an error." : "(no content)";
 }
 
 export class WorkIqAgent {
   private readonly model: ReturnType<typeof buildModel>;
-  private readonly boundModel: any;
-  private readonly tools: ReturnType<typeof tool>[];
+  private boundModel: any;
+  private tools: ReturnType<typeof tool>[] = [];
   private history: BaseMessage[] = [];
   private queue: Promise<unknown> = Promise.resolve();
 
-  constructor(
+  private constructor(
     private readonly mcp: WorkIqMcpClient,
     private readonly me: string | null,
     private readonly timeZone: string
   ) {
     this.model = buildModel();
-
-    const askTool = tool(
-      async ({ question }) => {
-        const result = await this.mcp.callTool("ask", {
-          question,
-          timeZone: this.timeZone,
-        });
-        const raw = firstText(result);
-        // `ask` returns a JSON string: { response, conversationId }.
-        try {
-          const parsed = JSON.parse(raw);
-          return String(parsed.response ?? raw);
-        } catch {
-          return raw || "(no response)";
-        }
-      },
-      {
-        name: "workiq_ask",
-        description:
-          "Ask Microsoft 365 Copilot a natural-language question grounded in the signed-in user's work data (emails, meetings, files, chats, people). Use for any informational question about the user's M365 content.",
-        schema: z.object({
-          question: z.string().describe("The natural-language question to ask."),
-        }),
-      }
-    );
-
-    const sendMailTool = tool(
-      async ({ to, subject, body }) => {
-        const result = await this.mcp.sendMail({ to, subject, body });
-        const sc = result.structuredContent;
-        const status = sc?.statusCode;
-        if (result.isError || (typeof status === "number" && status >= 400)) {
-          return `Failed to send email (status ${status ?? "?"}): ${
-            (sc as any)?.error ?? "unknown error"
-          }`;
-        }
-        return `Email sent to ${to.join(", ")}${status ? ` (status ${status})` : ""}.`;
-      },
-      {
-        name: "workiq_send_mail",
-        description:
-          "Send an email as the signed-in user via the Work IQ Tool API. Use when the user asks to send/email something.",
-        schema: z.object({
-          to: z
-            .array(z.string())
-            .describe("Recipient email addresses."),
-          subject: z.string().describe("Email subject."),
-          body: z.string().describe("Email body (plain text)."),
-        }),
-      }
-    );
-
-    this.tools = [askTool, sendMailTool];
-    this.boundModel = this.model.bindTools(this.tools);
     this.reset();
+  }
+
+  /**
+   * Create an agent whose tools are ALL the tools the Work IQ MCP server exposes
+   * (ask, list_agents, fetch, create/update/delete_entity, do_action,
+   * call_function, get_schema, search_paths). Tools are generated dynamically
+   * from the MCP tool list (name + description + JSON-Schema), so the agent
+   * always matches whatever the server offers.
+   */
+  static async create(
+    mcp: WorkIqMcpClient,
+    me: string | null,
+    timeZone: string
+  ): Promise<WorkIqAgent> {
+    const agent = new WorkIqAgent(mcp, me, timeZone);
+    await agent.initTools();
+    return agent;
+  }
+
+  private async initTools(): Promise<void> {
+    const { tools } = await this.mcp.listTools();
+    this.tools = tools.map((t) =>
+      tool(
+        async (args: Record<string, unknown>) => {
+          // Inject the user's time zone into `ask` when the model omits it.
+          const finalArgs =
+            t.name === "ask" && args && !("timeZone" in args)
+              ? { ...args, timeZone: this.timeZone }
+              : args ?? {};
+          const result = await this.mcp.callTool(t.name, finalArgs);
+          return resultToText(result);
+        },
+        {
+          name: t.name,
+          description: t.description ?? t.name,
+          schema: (t.inputSchema as any) ?? z.object({}),
+        }
+      )
+    );
+    this.boundModel = this.model.bindTools(this.tools);
   }
 
   /** Reset the conversation history (keeps the system prompt). */
@@ -153,13 +144,16 @@ export class WorkIqAgent {
       new SystemMessage(
         [
           "You are a helpful Microsoft 365 assistant for the signed-in user.",
-          this.me ? `The user's own email address is ${this.me}.` : "",
-          "Use the workiq_ask tool for questions grounded in the user's M365 data.",
-          "Base your answer on the tool's result; if it reports no results, say",
-          "there are none — never claim you cannot access Microsoft 365.",
-          "Use the workiq_send_mail tool to send email. When the user refers to",
-          '"themselves" / "myself" / "我自己", send it to their own address.',
-          "Compose a suitable subject and body in the user's language, then send.",
+          this.me
+            ? `The user's own email address is ${this.me}. When they say "myself" / "me" / "我自己", use this address.`
+            : "",
+          "You have Work IQ tools that operate on Microsoft 365 resource paths:",
+          "- ask: natural-language questions grounded in the user's data (emails, meetings, files, chats, people). Prefer this for information.",
+          "- fetch / call_function: read entities or compute results by resource path.",
+          "- create_entity / update_entity / delete_entity / do_action: create, change, delete, or perform actions (e.g. do_action /me/sendMail to send email; /me/chats/{id}/messages for Teams; create_entity /me/events for a meeting).",
+          "- search_paths and get_schema: discover valid paths and their request schema. When unsure of the exact path or body for a create/update/do_action, call search_paths and/or get_schema FIRST, then call the action tool.",
+          "Base answers on tool results; if a read returns nothing, say there are none — never claim you cannot access Microsoft 365.",
+          "Some mutating actions may be blocked by tenant policy. If a tool returns an access/policy error (e.g. 'not in the policy allowlist'), tell the user the action is blocked by tenant policy.",
           "After an action, briefly confirm what you did.",
         ]
           .filter(Boolean)
